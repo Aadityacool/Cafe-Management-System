@@ -1,113 +1,173 @@
-from tkinter import *
+import tkinter as tk
 from tkinter import messagebox
+import random
 
+# ---------------- MENU (20+ ITEMS) ----------------
 menu = {
-    "Coffee": 80,
-    "Cold Coffee": 120,
-    "Tea": 40,
-    "Green Tea": 60,
+    "Coffee": 40,
+    "Cold Coffee": 60,
+    "Espresso": 80,
+    "Cappuccino": 90,
+    "Latte": 100,
+    "Tea": 20,
+    "Green Tea": 30,
     "Cold Drink": 50,
-    "Lemon Soda": 70,
-    "Burger": 120,
-    "Cheese Burger": 150,
-    "Veg Pizza": 200,
-    "Cheese Pizza": 250,
-    "Sandwich": 100,
-    "Grilled Sandwich": 130,
-    "Pasta": 150,
-    "White Sauce Pasta": 180,
-    "French Fries": 90,
-    "Momos": 110,
-    "Paneer Roll": 140,
-    "Ice Cream": 80,
-    "Brownie": 100
+    "Lemon Soda": 40,
+    "Burger": 60,
+    "Cheese Burger": 80,
+    "Veg Sandwich": 50,
+    "Grilled Sandwich": 70,
+    "French Fries": 60,
+    "Pizza": 120,
+    "Garlic Bread": 80,
+    "Pasta": 110,
+    "Noodles": 100,
+    "Momos": 70,
+    "Chocolate Cake": 90,
+    "Ice Cream": 60
 }
 
-order = {}
+TAX_PERCENT = 5
+order_total = 0
 
+
+# ---------------- FUNCTIONS ----------------
 def add_item():
-    try:
-        item = item_var.get()
-        qty = int(qty_var.get())
-        if item == "":
-            return
-        if item in order:
-            order[item] += qty
-        else:
-            order[item] = qty
-        update_bill()
-    except:
-        pass
+    global order_total
 
-def update_bill():
-    bill_text.delete(1.0, END)
-    total = 0
-    for item, qty in order.items():
-        price = menu[item] * qty
-        total += price
-        bill_text.insert(END, f"{item:<20}{qty:<10}{price}\n")
-    gst = total * 0.05
-    final = total + gst
-    total_var.set(final)
+    item = item_var.get()
+    qty = qty_entry.get()
 
-def clear_order():
-    order.clear()
-    bill_text.delete(1.0, END)
-    total_var.set(0)
-
-def place_order():
-    if len(order) == 0:
-        messagebox.showwarning("Warning", "No items selected")
+    if item == "" or qty == "":
+        messagebox.showerror("Error", "Select item and quantity")
         return
-    messagebox.showinfo("Thank You", "Thank you for ordering!\nYour order is placed successfully.")
-    clear_order()
 
-root = Tk()
+    if not qty.isdigit():
+        messagebox.showerror("Error", "Quantity must be number")
+        return
+
+    qty = int(qty)
+    cost = menu[item] * qty
+    order_total += cost
+
+    bill_text.insert(tk.END, f"{item:<18} x{qty:<2} ₹{cost}\n")
+    total_label.config(text=f"Subtotal : ₹{order_total}")
+    qty_entry.delete(0, tk.END)
+
+
+def generate_bill():
+    if order_total == 0:
+        messagebox.showerror("Error", "Order something first")
+        return
+
+    table_no = random.randint(1, 20)
+    messagebox.showinfo("Table Assigned", f"Table No {table_no} is assigned to you")
+
+    tax = (order_total * TAX_PERCENT) / 100
+    total = order_total + tax
+
+    bill_text.insert(tk.END, "\n-----------------------------\n")
+    bill_text.insert(tk.END, f"Table No : {table_no}\n")
+    bill_text.insert(tk.END, f"Tax ({TAX_PERCENT}%) : ₹{tax:.2f}\n")
+    bill_text.insert(tk.END, f"Total     : ₹{total:.2f}\n")
+    bill_text.insert(tk.END, "-----------------------------\n")
+
+
+def clear_all():
+    global order_total
+    order_total = 0
+    bill_text.delete("1.0", tk.END)
+    total_label.config(text="Subtotal : ₹0")
+
+
+# ---------------- GUI ----------------
+root = tk.Tk()
 root.title("Cafe Management System")
-root.geometry("900x650")
-root.configure(bg="#2c2f33")
+root.geometry("650x600")  # FIXED SMALL SIZE
+root.resizable(False, False)
+root.configure(bg="#0F172A")  # Dark navy
 
-Label(root, text="Welcome to Our Cafe", font=("Helvetica", 22, "bold"), bg="#2c2f33", fg="#f5c542").pack(pady=10)
-Label(root, text="Fresh Food • Hot Coffee • Great Taste", font=("Arial", 12), bg="#2c2f33", fg="white").pack(pady=5)
+# HEADER
+tk.Label(
+    root,
+    text="☕ Cafe Management System",
+    font=("Segoe UI", 20, "bold"),
+    bg="#0F172A",
+    fg="#38BDF8"
+).pack(pady=10)
 
-main_frame = Frame(root, bg="#2c2f33")
-main_frame.pack(pady=10)
+# ORDER FRAME
+order_frame = tk.Frame(root, bg="#020617", bd=2, relief=tk.GROOVE)
+order_frame.pack(padx=15, pady=10, fill="x")
 
-left_frame = Frame(main_frame, bg="#23272a", padx=20, pady=20)
-left_frame.grid(row=0, column=0, padx=20)
+tk.Label(order_frame, text="Item", bg="#020617", fg="white").grid(row=0, column=0, padx=10, pady=8)
+item_var = tk.StringVar()
+tk.OptionMenu(order_frame, item_var, *menu.keys()).grid(row=0, column=1)
 
-right_frame = Frame(main_frame, bg="#23272a", padx=20, pady=20)
-right_frame.grid(row=0, column=1, padx=20)
+tk.Label(order_frame, text="Quantity", bg="#020617", fg="white").grid(row=0, column=2, padx=10)
+qty_entry = tk.Entry(order_frame, width=8)
+qty_entry.grid(row=0, column=3)
 
-Label(left_frame, text="Select Item", bg="#23272a", fg="white", font=("Arial", 12)).grid(row=0, column=0, pady=5)
-Label(left_frame, text="Quantity", bg="#23272a", fg="white", font=("Arial", 12)).grid(row=0, column=1, pady=5)
+tk.Button(
+    order_frame,
+    text="Add",
+    bg="#22C55E",
+    fg="black",
+    width=12,
+    command=add_item
+).grid(row=0, column=4, padx=10)
 
-item_var = StringVar()
-item_var.set(list(menu.keys())[0])
-qty_var = StringVar()
+# BILL FRAME
+bill_frame = tk.Frame(root, bg="#020617", bd=2, relief=tk.GROOVE)
+bill_frame.pack(padx=15, pady=10, fill="both", expand=True)
 
-OptionMenu(left_frame, item_var, *menu.keys()).grid(row=1, column=0, padx=5)
-Entry(left_frame, textvariable=qty_var).grid(row=1, column=1, padx=5)
+tk.Label(
+    bill_frame,
+    text="🧾 Bill",
+    bg="#020617",
+    fg="#FACC15",
+    font=("Segoe UI", 14, "bold")
+).pack()
 
-Button(left_frame, text="Add Item", bg="#f5c542", fg="black", width=18, command=add_item).grid(row=2, column=0, columnspan=2, pady=15)
+bill_text = tk.Text(
+    bill_frame,
+    height=14,
+    bg="#E5E7EB",
+    fg="black",
+    font=("Courier New", 10),
+    bd=0
+)
+bill_text.pack(padx=8, pady=8, fill="both", expand=True)
 
-Label(right_frame, text="Bill Details", bg="#23272a", fg="#f5c542", font=("Arial", 14)).pack(pady=5)
-bill_text = Text(right_frame, height=18, width=45, bg="#1e2124", fg="white")
-bill_text.pack()
+# FOOTER
+total_label = tk.Label(
+    root,
+    text="Subtotal : ₹0",
+    font=("Segoe UI", 13, "bold"),
+    bg="#0F172A",
+    fg="#FACC15"
+)
+total_label.pack()
 
-bottom_frame = Frame(root, bg="#2c2f33")
-bottom_frame.pack(pady=10)
-
-total_var = DoubleVar()
-Label(bottom_frame, text="Total Amount (Including GST)", bg="#2c2f33", fg="white", font=("Arial", 12)).grid(row=0, column=0, padx=10)
-Entry(bottom_frame, textvariable=total_var, state="readonly", width=20, bg="#f5c542", fg="black", font=("Arial", 12, "bold")).grid(row=0, column=1)
-
-btn_frame = Frame(root, bg="#2c2f33")
+btn_frame = tk.Frame(root, bg="#0F172A")
 btn_frame.pack(pady=10)
 
-Label(root, text="Thank You for Visiting Our Cafe", bg="#2c2f33", fg="#f5c542", font=("Arial", 11)).pack(pady=10)
+tk.Button(
+    btn_frame,
+    text="Generate Bill",
+    bg="#38BDF8",
+    fg="black",
+    width=18,
+    command=generate_bill
+).grid(row=0, column=0, padx=10)
 
-Button(btn_frame, text="Place Order", bg="#43b581", fg="white", width=18, command=place_order).grid(row=0, column=0, padx=15)
-Button(btn_frame, text="Clear Order", bg="#f04747", fg="white", width=18, command=clear_order).grid(row=0, column=1, padx=15)
+tk.Button(
+    btn_frame,
+    text="Clear",
+    bg="#EF4444",
+    fg="white",
+    width=18,
+    command=clear_all
+).grid(row=0, column=1, padx=10)
 
 root.mainloop()
